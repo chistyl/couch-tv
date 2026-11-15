@@ -956,9 +956,10 @@ html.still .tile.focus .face, html.still .tile.focus .face::after { animation: n
   box-shadow: inset 0 0 0 0.0625rem rgba(255, 255, 255, 0.18), inset 0 0.125rem 0.0625rem -0.0625rem rgba(255, 255, 255, 0.5), 0 1.25rem 3rem rgba(0, 0, 0, 0.3);
 }
 .np.on { display: flex; }
-.np-art { display: flex; flex: none; align-items: center; justify-content: center; width: 4.75rem; height: 4.75rem; border-radius: 0.875rem; object-fit: cover; background: rgba(255, 255, 255, 0.1); }
+.np-art { display: flex; flex: none; align-items: center; justify-content: center; width: 4.75rem; height: 4.75rem; border-radius: 50%; object-fit: cover; background: #fff; color: #252525; cursor: pointer; }
 .np-art.gone { visibility: hidden; }
-.np-art svg { width: 2rem; height: 2rem; fill: none; stroke: rgba(255, 255, 255, 0.8); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.np-art svg { width: 2rem; height: 2rem; fill: none; stroke: #252525; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.np-art:focus-visible { outline: 0.1875rem solid #fff; outline-offset: 0.1875rem; }
 .np-t { flex: 1; min-width: 0; }
 .np-app { display: block; font-size: 0.9375rem; line-height: 1.25rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .np-t b { display: block; margin-top: 0.125rem; font-size: 1.375rem; line-height: 1.75rem; font-weight: 620; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
