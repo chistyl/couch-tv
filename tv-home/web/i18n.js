@@ -24,7 +24,8 @@
     { id: "nl", name: "Nederlands", locale: "nl-BE", clock: "24h", country: "BE" },
     { id: "cs", name: "Čeština", locale: "cs-CZ", clock: "24h", country: "CZ" },
     { id: "he", name: "עברית", locale: "he-IL", clock: "24h", country: "IL", dir: "rtl" },
-    { id: "pt", name: "Português (Brasil)", locale: "pt-BR", clock: "24h", country: "BR" }
+    { id: "pt", name: "Português (Brasil)", locale: "pt-BR", clock: "24h", country: "BR" },
+    { id: "zh-TW", name: "繁體中文（台灣）", locale: "zh-TW", clock: "24h", country: "TW" }
   ];
 
   var S = {};
@@ -5843,7 +5844,48 @@
     sh_hint: "Esquerda e direita movem, cima e baixo trocam de linha. OK confirma. Voltar fecha.",
   };
 
-  var lang = "en";
+  // Traditional Chinese (Taiwan). Untranslated long-tail strings still fall back to English.
+  S["zh-TW"] = Object.assign({}, S.en, {
+    keep_watching: "繼續觀看",
+    custom_cards: "自訂卡片",
+    who_watching: "目前觀看者",
+    apps: "應用程式",
+    more_apps: "更多應用程式",
+    app_store: "應用程式商店",
+    settings: "設定",
+    new_app: "新增",
+    nothing_yet: "目前沒有待續觀看的內容。",
+    everyone: "所有人",
+    sleep_timer: "睡眠定時",
+    switching: "切換中…",
+    picture_mode: "畫面模式",
+    classic_look: "經典風格",
+    oled_look: "OLED 電影風格",
+    night_look: "夜間風格",
+    input: "輸入來源",
+    bluetooth: "藍牙",
+    network: "網路",
+    soundscape: "環境音效",
+    screen_off: "關閉螢幕",
+    smart_home: "智慧家庭",
+    about_version: "版本",
+    about_web: "網頁預覽",
+    about_code: "GitHub 專案",
+    about_running: "執行狀態",
+    home_row: "設為預設主畫面",
+    home_now: "已設為預設主畫面。",
+    home_not_yet: "尚未變更預設主畫面。",
+    sh_climate: "空調",
+    sh_scenes: "情境",
+    sh_checking: "檢查中",
+    sh_off: "關閉",
+    sh_mode: "模式",
+    sh_mode_auto: "自動",
+    sh_turn_on: "開啟",
+    sh_turn_off: "關閉"
+  });
+
+  var lang = "zh-TW";
   function find(id) { return LANGS.filter(function (l) { return l.id === id; })[0] || null; }
 
   function set(id) {
@@ -5861,11 +5903,12 @@
   function device() {
     var n = "";
     try { n = String(navigator.language || ""); } catch (e) {}
+    if (/^zh(?:-|$)/i.test(n)) return "zh-TW";
     if (/^es-MX/i.test(n)) return "es-MX";
     if (/^sr(?:-|$)/i.test(n)) return "sr-Latn-RS";
     if (/^he(?:-|$)|^iw(?:-|$)/i.test(n)) return "he";
     n = n.slice(0, 2).toLowerCase();
-    return find(n) ? n : "en";
+    return find(n) ? n : "zh-TW";
   }
 
   function t(key, vars) {
