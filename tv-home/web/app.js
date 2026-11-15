@@ -4040,7 +4040,7 @@
     if (kept("tvhome.home.asked") || kidsOn()) return;
     if (zone !== "grid" && zone !== "shelf" && zone !== "people" && zone !== "quick") return;
     if (homeState() !== "ask") return;
-    askKind = "home"; zone = "updask"; ai = 0;
+    askKind = "home"; zone = "ask"; ai = 0;
     clearFocus();
     renderAsk();
   }
