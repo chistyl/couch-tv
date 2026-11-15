@@ -187,7 +187,6 @@ class MainActivity : Activity() {
             }
         } else if (offline || fallback != null) connect()
         io.execute { warmApps() }
-        Updater.resumed(this)   // the daily look for a new release (Home settings, Updates)
     }
 
     override fun onPause() {
@@ -359,7 +358,6 @@ class MainActivity : Activity() {
         settings.textZoom = 100
         addJavascriptInterface(Native(), "TVOS")
         addJavascriptInterface(HomeAssistant.Page(this@MainActivity, this), "TVHA")   // smart home, see HomeAssistant.kt
-        addJavascriptInterface(Updater.Page(this@MainActivity, this), "TVUP")   // updates from GitHub releases, see Updater.kt
         webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView, url: String) {
                 if (!loadFailed && url.startsWith("http")) {
