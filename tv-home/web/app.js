@@ -1506,7 +1506,7 @@
     if (zone !== "grid" && zone !== "shelf" && zone !== "people" && zone !== "quick") return;
     askKind = "dev";
     ai = 0;
-    zone = "updask";
+    zone = "ask";
     clearFocus();
     renderAsk();
   }
@@ -2027,7 +2027,7 @@
     else if (zone === "menu") closeMenu();
     else if (zone === "inputs") closeInputMenu();
     else if (zone === "smart") closeSmart();
-    else if (zone === "updask") { $("gear-pop").classList.remove("on", "ask"); document.documentElement.classList.remove("gearing"); }
+    else if (zone === "ask") { $("gear-pop").classList.remove("on", "ask"); document.documentElement.classList.remove("gearing"); }
     else if (zone === "ambient") { ambientOpen = false; ambientDismissed = true; renderAmbientMusic(); }
     if (lift) dropLift();
     if (expanded) { expanded = false; renderGrid(); }
@@ -3227,7 +3227,7 @@
   }
   function renderGear() {
     var pop = $("gear-pop");
-    var items = [[ICONS.sliders, t("gear_home"), updReady() ? t("upd_gear", { v: UPD.latest, c: UPD.current || "" }) : t("gear_home_sub")],
+    var items = [[ICONS.sliders, t("gear_home"), t("gear_home_sub")],
       [ICONS.gear, t("gear_tv"), t("gear_tv_sub")]];
     pop.innerHTML = items.map(function (it, i) {
       return '<div class="grow' + (i === gi ? " focus" : "") + '" role="menuitem"><i>' + it[0] + "</i><span><b>" + esc(it[1]) +
@@ -4025,82 +4025,6 @@
     try { if (TV && TV.restartHome) { TV.restartHome(); return; } } catch (e) {}
     restart();
   }
-  // ---- updates: couch-tv's own GitHub releases (the launcher's Updater.kt) ----
-  // The launcher looks once a day while the home is on screen (switch below); "Check now" looks
-  // straight away. A newer release puts a dot on the gear tile and says so on the home once.
-  // Installing always goes through Android's own "update this app?" screen, and keeps every
-  // setting. No launcher behind the page (a browser, a Samsung, the on-TV app, an older launcher):
-  // no Updates section at all. mock.js stands in for previews (?update=1).
-  var UPD = null;
-  function upd() { return window.TVUP || window.MOCK_UPDATER || null; }
-  function updRead() {
-    var u = upd();
-    UPD = null;
-    try { if (u) UPD = JSON.parse(u.state()); } catch (e) {}
-    return UPD;
-  }
-  // A newer release is out: one this TV can install, or one a copy built on another computer can't
-  // take (refused), which still gets the dot and the line so the household hears about it.
-  // the launcher's news: a check finished, a download moved on, the installer answered
-  // Once per release, a line on the home; the gear tile's dot stays until it is installed.
-  // Asked once: tell the household about new versions, or leave it to "Check for updates now"? Until
-  // they answer nothing is checked by itself, so frequent releases never nag anyone who did not ask.
-  // The setup's answer (home.updates in config.json) counts as the answer; Back counts as No.
-  var ai = 0;
-  // Which question is on screen: "upd" (new versions, once), "home" (make couch-tv the home, once)
-  // or "dev" (extend Developer Mode, weekly).
-  var askKind = "upd";
-  function askRows() {
-    if (askKind === "dev") {
-      return [[ICONS.devmode, t("dev_ask_yes"), t("dev_ask_yes_sub")], [ICONS.sliders, t("dev_ask_no"), t("dev_ask_no_sub")]];
-    }
-    if (askKind === "home") {
-      return [[ICONS.apps, t("home_ask_yes"), t("home_ask_yes_sub")], [ICONS.sliders, t("home_ask_no"), t("home_ask_no_sub")]];
-    }
-    return [[ICONS.download, t("upd_ask_yes"), t("upd_ask_yes_sub")], [ICONS.sliders, t("upd_ask_no"), t("upd_ask_no_sub")]];
-  }
-  function askHead() {
-    if (askKind === "dev") return ["dev_ask", "dev_ask_sub"];
-    if (askKind === "home") return ["home_ask", "home_ask_sub"];
-    return ["upd_ask", "upd_ask_sub"];
-  }
-  function renderAsk() {
-    var pop = $("gear-pop");
-    var head = askHead();
-    var items = askRows();
-    pop.innerHTML = '<div class="ask-h"><b>' + esc(t(head[0])) + "</b><small>" + esc(t(head[1])) + "</small></div>" +
-      items.map(function (it, i) {
-        return '<div class="grow' + (i === ai ? " focus" : "") + '" role="menuitem"><i>' + it[0] + "</i><span><b>" +
-          esc(it[1]) + "</b><small>" + esc(it[2]) + "</small></span></div>";
-      }).join("");
-    pop.style.left = pop.style.top = "";
-    pop.classList.add("on", "ask");
-    document.documentElement.classList.add("gearing");
-  }
-  function answerAsk(yes) {
-    $("gear-pop").classList.remove("on", "ask");
-    document.documentElement.classList.remove("gearing");
-    zone = "grid";
-    if (askKind === "home") {
-      keep("tvhome.home.asked", 1);
-      startFocus();
-      paintFocus();
-      if (yes) requestHome();
-      return;
-    }
-    if (askKind === "dev") {
-      keep("tvhome.devmode.asked", String(Date.now()));
-      startFocus();
-      paintFocus();
-      if (yes) devExtend();
-      else status(t("dev_ask_no_done"));
-      return;
-    }
-    upd().auto(yes);
-    startFocus();
-    paintFocus();
-    status(t("upd_ask_done"));
-  }
   // ---- making couch-tv the home with no computer (issue #98) ----
   // Plain Android TV 10+ lets an app ask Android to make it the home (the launcher's HomeRole.kt
   // opens the system's own chooser). Asked once, and again any time from Home settings, About.
@@ -4512,7 +4436,7 @@
     }
     if (p.zone === "menu") { if (menuI === p.i) return false; menuI = p.i; renderMenu(); return true; }
     if (p.zone === "gear") { if (gi === p.i) return false; gi = p.i; renderGear(); return true; }
-    if (p.zone === "updask") { if (ai === p.i) return false; ai = p.i; renderAsk(); return true; }
+    if (p.zone === "ask") { if (ai === p.i) return false; ai = p.i; renderAsk(); return true; }
     if (p.zone === "appmenu") { if (amI === p.i) return false; amI = p.i; renderAppMenu(); return true; }
     if (p.zone === "settings") {
       if (p.sec !== undefined) {   // a section changes the page only on a click, so passing over the list is harmless
@@ -4936,7 +4860,7 @@
       }
       return api("POST", "/api/who", { who: who });
     }).catch(function () {});
-    hello.then(refresh).then(function () { mark("home-painted-live"); updTell(); updAsk(); homeAsk(); });
+    hello.then(refresh).then(function () { mark("home-painted-live"); homeAsk(); });
     resetIdlePhoto();
   }
 
