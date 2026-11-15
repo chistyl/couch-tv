@@ -4048,16 +4048,6 @@
     if (zone === "settings") renderSettings();
     status(t(held ? "home_now" : "home_not_yet"));
   }
-    rows.push({ kind: "action", key: "upd-check", label: t("upd_check"), sub: busy === "checking" ? t("upd_checking") : updWhen(u),
-      act: function () { if (!busy) upd().check(); } });
-    if (u.error) rows.push(info("upd-err", t("upd_err_" + u.error)));
-    else if (u.refused) rows.push(info("upd-err", t("upd_err_other_key")));
-    else if (u.checked && !u.available && !busy) rows.push(info("upd-latest", t("upd_latest")));
-    rows.push({ kind: "toggle", key: "upd-auto", label: t("upd_auto"), value: u.auto ? t("on") : t("off"),
-      act: function () { upd().auto(!u.auto); } });
-    rows.push(info("upd-note", t("upd_note")));
-    return rows;
-  }
 
   // Back to config.json for everything but the people and the apps (which have their own lists).
   function resetSettings() {
