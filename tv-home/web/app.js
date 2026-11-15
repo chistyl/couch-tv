@@ -2681,7 +2681,6 @@
   // The small blue dot: an app not opened yet, or (on the gear tile) a new couch-tv release.
   function dotHTML(it) {
     if (isNew(it.package)) return '<i class="dot" aria-label="' + esc(t("new_app")) + '"></i>';
-    if (it.kind === "gear" && updReady()) return '<i class="dot" aria-label="' + esc(t("upd_gear", { v: UPD.latest, c: UPD.current || "" })) + '"></i>';
     return "";
   }
 
@@ -2768,7 +2767,6 @@
     if (zone === "gear") { if (gridEls[g]) gridEls[g].classList.add("focus"); renderGear(); return; }
     if (zone === "appmenu") { if (gridEls[g]) gridEls[g].classList.add("focus"); renderAppMenu(); return; }
     if (zone === "shelfmenu") { if (shelfEls[s]) shelfEls[s].classList.add("focus"); renderShelfMenu(); return; }
-    if (zone === "updask") { renderAsk(); return; }
     if (zone === "menu") { renderMenu(); return; }
     if (zone === "inputs") { if (quickEls[qi]) quickEls[qi].classList.add("focus"); renderInputMenu(); return; }
     if (zone === "pmenu") { renderPop(); $("people").classList.add("focus"); return; }
@@ -2842,7 +2840,6 @@
     if (zone === "gear") { if (dy) { gi = Math.max(0, Math.min(1, gi + dy)); renderGear(); } return; }
     if (zone === "appmenu") { if (dy) { amI = Math.max(0, Math.min(amItems.length - 1, amI + dy)); renderAppMenu(); } return; }
     if (zone === "shelfmenu") { if (dy) { smI = Math.max(0, Math.min(smItems.length - 1, smI + dy)); renderShelfMenu(); } return; }
-    if (zone === "updask") { if (dy) { ai = Math.max(0, Math.min(1, ai + dy)); renderAsk(); } return; }
     if (zone === "inputs") { if (dy) { inI = Math.max(0, Math.min(inItems.length - 1, inI + dy)); renderInputMenu(); } return; }
     if (lift) { moveLift(dx, dy); return; }
     if (zone === "ambient") {
@@ -3001,7 +2998,6 @@
     if (zone === "gear") { if (dy) { gi = wrapIndex(2, dy); renderGear(); } return; }
     if (zone === "appmenu") { if (dy) { amI = wrapIndex(amItems.length, dy); renderAppMenu(); } return; }
     if (zone === "shelfmenu") { if (dy) { smI = wrapIndex(smItems.length, dy); renderShelfMenu(); } return; }
-    if (zone === "updask") { if (dy) { ai = wrapIndex(2, dy); renderAsk(); } return; }
     if (zone === "inputs") { if (dy) { inI = wrapIndex(inItems.length, dy); renderInputMenu(); } return; }
     if (zone === "pmenu") { if (dy) { pmi = wrapIndex(PEOPLE.length, dy); renderPop(); } return; }
     if (zone === "menu") { menuI = wrapIndex(SLEEP_CHOICES.length, d); paintFocus(); return; }
@@ -3097,7 +3093,6 @@
     if (zone === "gear") { closeGear(); paintFocus(); return; }
     if (zone === "appmenu") { closeAppMenu(); paintFocus(); return; }
     if (zone === "shelfmenu") { closeShelfMenu(); paintFocus(); return; }
-    if (zone === "updask") { answerAsk(false); return; }   // BACK counts as "I'll check myself"
     if (lift) { dropLift(); return; }   // BACK puts a picked-up app down where it is
     if (zone === "pmenu") { if (plift) dropPeople(); else closePop(); paintFocus(); return; }
     if (zone === "menu") { closeMenu(); paintFocus(); return; }   // BACK just closes the sleep choices
@@ -3122,7 +3117,7 @@
   function hold() {
     touched = true;
     if (zone === "settings") return setHold();
-    if (zone === "gear" || zone === "smart" || zone === "updask" || zone === "inputs" || zone === "shelfmenu") return false;
+    if (zone === "gear" || zone === "smart" || zone === "inputs" || zone === "shelfmenu") return false;
     if (lift) { dropLift(); return true; }
     if (zone === "pmenu") {
       if (plift) dropPeople();
@@ -3141,7 +3136,6 @@
     if (zone === "gear") { if (gi === 0) openSettings(); else openTvSettings(); return; }
     if (zone === "appmenu") { doAppMenu(); return; }
     if (zone === "shelfmenu") { doShelfMenu(); return; }
-    if (zone === "updask") { answerAsk(ai === 0); return; }
     if (lift) { dropLift(); return; }
     if (zone === "menu") { setSleep(SLEEP_CHOICES[menuI]); paintFocus(); return; }
     if (zone === "inputs") { doInputMenu(); paintFocus(); return; }
@@ -3366,7 +3360,6 @@
   function info(key, label, value, sub) { return { kind: "info", key: key, label: label, value: value, sub: sub }; }
 
   function sectionRows(id) {
-    if (id === "updates") return updateRows();
     if (id === "language") return languageRows();
     if (id === "location") return locationRows();
     if (id === "weather") return weatherRows();
@@ -4048,21 +4041,8 @@
   }
   // A newer release is out: one this TV can install, or one a copy built on another computer can't
   // take (refused), which still gets the dot and the line so the household hears about it.
-  function updReady() { return !!(UPD && (UPD.available || UPD.refused)); }
   // the launcher's news: a check finished, a download moved on, the installer answered
-  function updChanged(s) {
-    var was = updReady();
-    UPD = s && typeof s === "object" ? s : updRead();
-    if (zone === "settings") renderSettings();
-    else if (updReady() !== was) renderGrid();
-    updTell();
-  }
   // Once per release, a line on the home; the gear tile's dot stays until it is installed.
-  function updTell() {
-    if (!updReady() || kept("tvhome.update.told") === UPD.latest) return;
-    keep("tvhome.update.told", UPD.latest);
-    status(t("upd_told", { v: UPD.latest, c: UPD.current || "" }));
-  }
   // Asked once: tell the household about new versions, or leave it to "Check for updates now"? Until
   // they answer nothing is checked by itself, so frequent releases never nag anyone who did not ask.
   // The setup's answer (home.updates in config.json) counts as the answer; Back counts as No.
@@ -4070,16 +4050,6 @@
   // Which question is on screen: "upd" (new versions, once), "home" (make couch-tv the home, once)
   // or "dev" (extend Developer Mode, weekly).
   var askKind = "upd";
-  function updAsk() {
-    askKind = "upd";
-    if (!UPD || !UPD.supported || UPD.answered || kidsOn()) return;
-    if (HOME.updates === "notify" || HOME.updates === "manual") { upd().auto(HOME.updates === "notify"); return; }
-    if (zone !== "grid" && zone !== "shelf" && zone !== "people" && zone !== "quick") return;
-    askKind = "upd";
-    zone = "updask"; ai = 0;
-    clearFocus();
-    renderAsk();
-  }
   function askRows() {
     if (askKind === "dev") {
       return [[ICONS.devmode, t("dev_ask_yes"), t("dev_ask_yes_sub")], [ICONS.sliders, t("dev_ask_no"), t("dev_ask_no_sub")]];
@@ -4154,21 +4124,6 @@
     if (zone === "settings") renderSettings();
     status(t(held ? "home_now" : "home_not_yet"));
   }
-  function updWhen(u) {
-    if (!u.checked) return t("upd_never");
-    var loc = window.I18N ? window.I18N.locale() : "en-AU";
-    var when = new Date(u.checked).toLocaleString(loc, { day: "numeric", month: "long", hour: "numeric", minute: "2-digit", hour12: !CLOCK24 });
-    return t("upd_last", { when: when });
-  }
-  function updateRows() {
-    var u = updRead() || {}, busy = u.busy || "";
-    var rows = [info("upd-ver", t("about_version"), u.current || "")];
-    if (u.latest) rows.push(info("upd-newest", t("upd_newest"), u.latest));   // both numbers side by side
-    if (u.available) {
-      rows.push({ kind: "action", key: "upd-install", label: t("upd_install", { v: u.latest }),
-        sub: busy === "downloading" ? t("upd_downloading", { p: u.progress || 0 }) : busy === "installing" ? t("upd_confirm") : u.title || "",
-        act: function () { if (!busy) upd().install(); } });
-    }
     rows.push({ kind: "action", key: "upd-check", label: t("upd_check"), sub: busy === "checking" ? t("upd_checking") : updWhen(u),
       act: function () { if (!busy) upd().check(); } });
     if (u.error) rows.push(info("upd-err", t("upd_err_" + u.error)));
@@ -4484,7 +4439,7 @@
   function settingsKey() {
     if (kidsOn()) { window.KidsMode.askPin(); return; }
     if (idlePhotoInput(null)) return;
-    if (zone === "gear" || zone === "settings" || zone === "smart" || zone === "appmenu" || zone === "shelfmenu" || zone === "updask" || zone === "inputs") { goHome(); return; }
+    if (zone === "gear" || zone === "settings" || zone === "smart" || zone === "appmenu" || zone === "shelfmenu" || zone === "inputs") { goHome(); return; }
     openGear();
   }
 
@@ -4511,7 +4466,7 @@
       return i >= 0 ? { zone: "ambient", i: i } : null;
     }
     if (zone === "menu") { i = inList(kids("sleep-menu"), el); return i >= 0 ? { zone: "menu", i: i } : null; }
-    if (zone === "gear" || zone === "updask") { i = inList(kids("gear-pop", ".grow"), el); return i >= 0 ? { zone: zone, i: i } : null; }
+    if (zone === "gear") { i = inList(kids("gear-pop", ".grow"), el); return i >= 0 ? { zone: zone, i: i } : null; }
     if (zone === "appmenu") { i = inList(kids("app-pop", ".grow"), el); return i >= 0 ? { zone: "appmenu", i: i } : null; }
     if (zone === "settings") {
       if (SET.typing || SET.lift) return null;
@@ -4733,7 +4688,7 @@
   function render() {
     renderShelf();
     renderGrid();
-    if (!touched && zone !== "updask" && !restoreFocus()) startFocus();
+    if (!touched && !restoreFocus()) startFocus();
     paintFocus();
     kidSync();
     if (kidsOn()) window.KidsMode.rerender();
@@ -4779,7 +4734,7 @@
 
   function refresh() {
     // never reshuffle under something being moved, or under the settings screen
-    if (lift || zone === "pmenu" || zone === "settings" || zone === "gear" || zone === "smart" || zone === "updask") return Promise.resolve();
+    if (lift || zone === "pmenu" || zone === "settings" || zone === "gear" || zone === "smart") return Promise.resolve();
     if (OFFLINE) {
       // only the TV's own apps, in the order last saved; no shows, no Screens
       if (TV) data.apps = sortApps(nativeApps() || []);
@@ -4845,7 +4800,7 @@
     ];
     return Promise.all(jobs.map(function (p) { return p.then(function () { return true; }, function () { return false; }); }))
       .then(function (ok) {
-        if (lift || zone === "pmenu" || zone === "settings" || zone === "gear" || zone === "smart" || zone === "updask") return;
+        if (lift || zone === "pmenu" || zone === "settings" || zone === "gear" || zone === "smart") return;
         data.bridge = ok[0] || ok[2];
         var apps = TV ? nativeApps() : (window.MOCK_APPS ? window.MOCK_APPS.slice() : null);
         if (!apps) apps = (data.bridgeApps || []).filter(function (a) { return a.installed !== false && a.id !== "home"; })
@@ -4881,8 +4836,6 @@
     pause: function () { saveFocusNow(); pauseVideo(); },
     // the launcher's file picker has copied the chosen photos into its own storage (Home settings)
     photosAdded: function (names) { photosAdded(names); },
-    // the launcher's updater has news (Updater.kt)
-    update: function (state) { updChanged(state); },
     // Android's "default home app" chooser closed (HomeRole.kt, #98)
     homeAnswered: function (held) { homeAnswered(held); } };
 
@@ -4914,7 +4867,6 @@
     document.addEventListener("wheel", resetSmartIdle, { passive: true });
     initSettings();
     // Home settings gets an Updates section, before About, where the launcher can update itself
-    if (updRead() && UPD.supported) SECS.splice(SECS.length - 1, 0, ["updates", "download"]);
     mark("app-start");
     clock();
     setInterval(clock, 15000);
