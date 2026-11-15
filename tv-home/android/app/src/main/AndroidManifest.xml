@@ -9,9 +9,6 @@
     <!-- Smart home, only with a doorbell set up: the doorbell card over whatever is playing.
          Not granted on install: apply.sh grants it over ADB only when config.json has a doorbell. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <!-- Updates (Home settings, Updates): hand a new release to Android's installer, which always
-         asks the person at the TV first. Android also asks once to let this app install apps. -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- Holding OK on an app, "Uninstall": lets this app open Android's remove dialog. Without it
          the package installer closes straight away (Android 9 and newer). It always asks first. -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
@@ -83,11 +80,6 @@
         <intent>
             <action android:name="android.intent.action.GET_CONTENT" />
             <data android:mimeType="image/*" />
-        </intent>
-        <!-- Android's "install unknown apps" switch for this app, before the first update. -->
-        <intent>
-            <action android:name="android.settings.MANAGE_UNKNOWN_APP_SOURCES" />
-            <data android:scheme="package" />
         </intent>
         <!-- Holding OK on an app, "Uninstall": Android's remove dialog (the package installer). -->
         <intent>
