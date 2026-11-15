@@ -1322,6 +1322,23 @@
       '<div class="np-ctl">' + btns.map(function (b, i) {
         return '<span class="nb' + (zone === "np" && i === npI ? " focus" : "") + '" role="button" aria-label="' + esc(b[1]) + '">' + ICONS[b[0]] + "</span>";
       }).join("") + "</div>";
+    // The circular cover is also a direct shortcut back to the app currently playing.
+    var cover = el.querySelector(".np-art");
+    var openPlayerApp = function () {
+      var pkg = music && music.app && (music.app.package || music.app.id);
+      if (!pkg) return;
+      if (TV && TV.launch && TV.launch(pkg)) return;
+      api("POST", "/api/launch", { app: pkg }).catch(function (e) { status(tBridge(e.key, e.vars, e.message)); });
+    };
+    if (cover) {
+      cover.setAttribute("role", "button");
+      cover.setAttribute("tabindex", "0");
+      cover.setAttribute("aria-label", t("np_open_app") || "開啟播放 App");
+      cover.addEventListener("click", openPlayerApp);
+      cover.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openPlayerApp(); }
+      });
+    }
   }
   function refreshMusic() {
     if (!NP_ON || (OFFLINE && !STANDALONE) || document.hidden) {
