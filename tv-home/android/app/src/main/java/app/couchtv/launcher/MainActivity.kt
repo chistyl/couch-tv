@@ -186,7 +186,8 @@ class MainActivity : Activity() {
                 if (!reachable(base)) main.post { if (resumed && !offline) { showOffline(); later(OFFLINE_RETRY_MS) } }
             }
         } else if (offline || fallback != null) connect()
-        io.execute { warmApps() }
+        // App labels and banners are warmed once on creation. Repeating this on every resume
+        // performs package-manager and disk work while the TV is trying to become responsive.
     }
 
     override fun onPause() {
