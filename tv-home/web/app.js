@@ -454,7 +454,7 @@
     if (r.classList.contains("clock-liquid") !== CLOCK_LIQUID) { r.classList.toggle("clock-liquid", CLOCK_LIQUID); glassShown = ""; }
   }
   function movingTiles() {
-    MOVING = LIGHTER ? false : typeof ST.moving_tiles === "boolean" ? ST.moving_tiles : typeof HOME.moving_tiles === "boolean" ? HOME.moving_tiles : GLASS !== "lite";
+    MOVING = LIGHTER ? false : typeof ST.moving_tiles === "boolean" ? ST.moving_tiles : typeof HOME.moving_tiles === "boolean" ? HOME.moving_tiles : false;
     document.documentElement.classList.toggle("still", !MOVING);
   }
   // Lighter home: ask for the 640 px size of a Keep watching picture, not the 1440 px one (a card is about 500 px wide)
