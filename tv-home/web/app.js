@@ -110,7 +110,7 @@
   var IDLE_PHOTO_SECONDS = 0, idlePhotoTimer = null, idlePhotoActive = false;
   var WX_AMBIENT = true, WX_SUN_GRADE = true;
   // Now playing (#31), on unless switched off; the navigation sound: system, soft or off (#32)
-  var NP_ON = true, KW_ON = true, SOUND_STYLE = "system", START_FOCUS = "people";
+  var NP_ON = true, KW_ON = true, SOUND_STYLE = "system", START_FOCUS = "apps";
   // Ambient sleep soundscapes (rain, fire, waves, brown noise)
   var SOUND_TYPE = "off", SOUND_VOL = 0.5, SOUND_FADE_SLEEP = true;
   function initSoundscape() {
@@ -308,7 +308,7 @@
   // rows without activating the focused app.
   function idlePhotoAllowed() {
     return IDLE_PHOTO_SECONDS > 0 && !kidsOn() && !document.hidden && !screenOffActive && !expanded && !lift &&
-      ["grid", "shelf", "people", "quick", "np"].indexOf(zone) >= 0;
+      ["grid", "shelf", "quick", "np"].indexOf(zone) >= 0;
   }
   function resetIdlePhoto() {
     clearTimeout(idlePhotoTimer);
@@ -413,7 +413,7 @@
     document.documentElement.classList.toggle("glass-icons", GLASS_ICONS);
     GLASS_AMT = glassAmount();
     CLOCK_LIQUID = (ST.clock_style || HOME.clock_style) === "liquid";
-    START_FOCUS = ["people", "apps", "keep_watching"].indexOf(ST.start_focus || HOME.start_focus) >= 0 ? (ST.start_focus || HOME.start_focus) : "people";
+    START_FOCUS = ["apps", "keep_watching"].indexOf(ST.start_focus || HOME.start_focus) >= 0 ? (ST.start_focus || HOME.start_focus) : "apps";
     glassClasses();
     // a link set in Home settings wins over home.video_url; one from config.json alone means on
     VIDEO_URL = typeof ST.video_url === "string" ? ST.video_url : typeof HOME.video_url === "string" ? HOME.video_url : "";
@@ -433,11 +433,7 @@
     if (!SCENES.length) SCENES = [SCENE_LIB[0]];
     SCENE_MS = Math.max(5, parseInt(ST.scene_seconds || HOME.scene_seconds, 10) || 20) * 1000;
     SUN_SYNC = typeof ST.sun_sync === "boolean" ? ST.sun_sync : !!HOME.sun_sync;
-    var people = CFG.people || [{ id: "person1", name: "Person 1" }, { id: "person2", name: "Person 2" }];
-    // people added, renamed or removed in Home settings with no bridge to keep them
-    var lst = kept("tvhome.people.list");
-    if (lst && Array.isArray(lst.people) && (lst.pending || ALONE)) people = lst.people;
-    setPeople(localPeopleOrder(people, OFFLINE));
+    setPeople([]);
     newApps = kept("tvhome.apps.new") || [];
   }
   function lookSetting() {
@@ -2026,14 +2022,8 @@
   // ---------------- kids mode (kids.js, docs/CONFIG.md "Kids mode") ----------------
   // A kids profile's home is kids.js's shelf, drawn over everything here. app.js keeps who is
   // watching; kids.js shows or hides itself from that, and hands back here once the parent PIN is right.
-  function kidsOn() { return !!(window.KidsMode && window.KidsMode.active()); }
-  function kidSync() {
-    if (!window.KidsMode) return;
-    var p = NOBODY ? null : PEOPLE.filter(function (x) { return x.id === who; })[0] || null;
-    var was = kidsOn();
-    window.KidsMode.sync(p);
-    if (kidsOn() && !was) kidsCover();
-  }
+  function kidsOn() { return false; }
+  function kidSync() {}
   // going into kids mode: whatever was open here closes first, so nothing is left behind the shelf
   function kidsCover() {
     if (zone === "settings") closeSettings();
@@ -2066,27 +2056,7 @@
     startFocus();
     paintFocus();
   }
-  function kidsInit() {
-    if (!window.KidsMode) return;
-    window.KidsMode.init({
-      t: t, esc: esc, iconUrl: iconUrl, TV: TV, api: api, keep: keep, kept: kept,
-      clock24: function () { return CLOCK24; },
-      online: function () { return !OFFLINE && data.bridge !== false; },
-      colour: colourOf, avatar: avatarHTML,
-      appName: function (pkg) {
-        var a = (data.apps || []).filter(function (x) { return x.package === pkg; })[0];
-        return a ? a.name : pkg;
-      },
-      installed: function (pkg) { return !(data.apps || []).length || (data.apps || []).some(function (x) { return x.package === pkg; }); },
-      launch: function (pkg) {
-        opened(pkg);
-        if (TV && TV.launch(pkg)) return;
-        api("POST", "/api/launch", { app: pkg }).catch(function (e) { status(tBridge(e.key, e.vars, e.message)); });
-      },
-      isOk: isOk, isBack: isBack, isMenu: isMenu, isSettings: isSettings, arrowOf: arrowOf,
-      unlocked: kidsUnlocked
-    });
-  }
+  function kidsInit() {}
   // The order of the names: kept by the bridge (the phone's People sheet uses the same list), or on
   // this TV when there is no bridge. "pending" means the bridge has not heard about it yet.
   function savePeopleOrder() {
@@ -2770,7 +2740,7 @@
 
   function shelfOn() { return !$("shelf-section").classList.contains("empty"); }
   // the switcher shows for two or more people, also while nobody has anything yet (issue #23)
-  function peopleOn() { return peopleCount() >= 2; }
+  function peopleOn() { return false; }
   function toPeople() { zone = "people"; pi = whoIndex(); }
 
   function paintFocus() {
@@ -3284,7 +3254,7 @@
   // also on the computer (/api/settings), so the phone and the TV agree.
   var ST_KEY = "tvhome.settings";
   var SECS = [["language", "globe"], ["location", "pin"], ["weather", "cloud"], ["look", "look"],
-    ["apps", "apps"], ["people", "person"], ["quick", "bolt"], ["about", "info"]];
+    ["apps", "apps"], ["quick", "bolt"], ["about", "info"]];
   var SET = { col: "secs", sec: 0, ri: 0, keyFocus: null, sub: null, lift: null, confirm: null, dirty: false, typing: null,
     msg: "", geo: { q: "", list: null, busy: false, err: false } };
   var REPO_URL = "github.com/Seagey/couch-tv";
@@ -3382,7 +3352,6 @@
     if (id === "weather") return weatherRows();
     if (id === "look") return lookRows();
     if (id === "apps") return appsRows();
-    if (id === "people") return peopleRows();
     if (id === "quick") return quickRows();
     return aboutRows();
   }
@@ -3660,7 +3629,7 @@
     } });
     rows.push({ kind: "cycle", key: "start-focus", label: t("start_focus"), sub: t("start_focus_sub"),
       value: t("start_focus_" + START_FOCUS), act: function () {
-        var steps = ["people", "keep_watching", "apps"];
+        var steps = ["keep_watching", "apps"];
         var i = steps.indexOf(START_FOCUS);
         START_FOCUS = steps[(i + 1) % steps.length];
         ST.start_focus = START_FOCUS;
@@ -4627,21 +4596,7 @@
 
   // The bridge's people list (the phone edits it). An order made on this TV while the bridge was
   // away is handed over first.
-  function bridgePeople(j) {
-    var list = j.people || [];
-    var lo = kept("tvhome.people.order"), lst = kept("tvhome.people.list");
-    if (lst && lst.pending && Array.isArray(lst.people)) {
-      // people added, renamed or removed in Home settings while the computer was off
-      list = lst.people;
-      api("POST", "/api/people", { people: lst.people })
-        .then(function (r) { keep("tvhome.people.list", { people: r.people || lst.people, pending: false }); }, function () {});
-    } else if (lo && lo.pending && lo.ids) {
-      list = localPeopleOrder(list, true);
-      api("POST", "/api/people", { order: lo.ids })
-        .then(function () { keep("tvhome.people.order", { ids: lo.ids, pending: false }); }, function () {});
-    }
-    if (zone !== "pmenu") setPeople(list);
-  }
+  function bridgePeople() { setPeople([]); }
   function bridgeOrder(j) {
     data.order = { saved: !!j.saved, line: j.line, packages: (j.apps || []).map(function (a) { return a.package; }) };
     var lo = kept("tvhome.order.tv");
@@ -4690,7 +4645,7 @@
       render();
       return Promise.resolve();
     }
-    var people = api("GET", "/api/people").then(bridgePeople, function () {});
+    var people = Promise.resolve();
     // LG: a warning when Developer Mode (and so couch-tv) is at risk, from the bridge
     if (window.COUCH_WEBOS) api("GET", "/api/tvs").then(function (j) {
       var id = TV_ID || j["default"], me = null;
@@ -4726,8 +4681,7 @@
       // Android's Watch Next rows: this app may read them, the bridge's ADB may not. They name a
       // play an app gave no title for (Netflix sends none, Prime only its own name, issue #23).
       KW_ON ? sendWatchNext() : Promise.resolve(),
-      // kids mode: the shelves as the phone left them (kids.js)
-      window.KidsMode ? window.KidsMode.refresh() : Promise.resolve()
+      Promise.resolve()
     ];
     return Promise.all(jobs.map(function (p) { return p.then(function () { return true; }, function () { return false; }); }))
       .then(function (ok) {

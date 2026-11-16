@@ -2,52 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import * as Ic from './icons.jsx';
 import { tick } from './haptics.js';
 import { logoFor } from './appLogos.js';
-import { Sheet, personColour } from './Sheets.jsx';
 import { t } from './i18n.js';
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
-// Who is watching. Up to 3 names (Both counts as one) sit side by side as a segmented switch, like on the TV. With 4 or
-// more it becomes one round avatar button (the current person's initial) that opens a short list.
-const SEG_MAX = 3;
-function WhoSwitch({ people, who, setWho }) {
-  const [open, setOpen] = useState(false);
-  const list = people || [];
-  const options = [...list.map((p) => ({ id: p.id, name: p.name, colour: personColour(p) })), { id: 'both', name: t('both') }];
-  if (options.length <= SEG_MAX) {
-    return (
-      <div className="seg glass" role="tablist" aria-label={t('whos_watching')}>
-        {options.map((o) => (
-          <button key={o.id} role="tab" aria-selected={who === o.id} className={who === o.id ? 'on' : ''}
-            onClick={() => { tick(); setWho(o.id); }}>{o.name}</button>
-        ))}
-      </div>
-    );
-  }
-  const cur = options.find((o) => o.id === who) || options[0];
-  const pick = (id) => { tick(); setWho(id); setOpen(false); };
-  return (
-    <>
-      <button className="round glass who-btn" aria-haspopup="dialog" aria-label={t('whos_watching_change', { name: cur.name })}
-        onClick={() => { tick(); setOpen(true); }}>
-        <span className="person-dot who-dot" style={{ background: cur.colour || 'rgba(255,255,255,0.28)' }}>{cur.id === 'both' ? <Ic.People size={18} /> : cur.name.slice(0, 1).toUpperCase()}</span>
-      </button>
-      <Sheet open={open} onClose={() => setOpen(false)} title={t('whos_watching')} className="who-sheet">
-        <div role="radiogroup" aria-label={t('whos_watching')}>
-          {options.map((o) => (
-            <button key={o.id} role="radio" aria-checked={who === o.id} className={`who-row ${who === o.id ? 'on' : ''}`} onClick={() => pick(o.id)}>
-              <span className="person-dot" style={{ background: o.colour || 'rgba(255,255,255,0.28)' }}>{o.id === 'both' ? <Ic.People size={18} /> : o.name.slice(0, 1).toUpperCase()}</span>
-              <span className="who-name">{o.name}</span>
-              {who === o.id && <span className="who-tick" aria-hidden="true">&#10003;</span>}
-            </button>
-          ))}
-        </div>
-      </Sheet>
-    </>
-  );
-}
-
-export function TopBar({ people, tvName, who, setWho, tv, appInfo, reach, sleepLeft, onPower, onMore }) {
+export function TopBar({ tvName, tv, appInfo, reach, sleepLeft, onPower, onMore }) {
   const status = reach === false ? t('not_connected')
     : !tv ? t('connecting')
       : !tv.tv_connected ? t('tv_not_connected')
@@ -65,7 +24,6 @@ export function TopBar({ people, tvName, who, setWho, tv, appInfo, reach, sleepL
   ].filter(Boolean);
   return (
     <header className="topbar">
-      <WhoSwitch people={people} who={who} setWho={setWho} />
       <div className={`tvname ${parts.length ? '' : 'is-app'}`}>
         <b>{tvName || t('tv')}</b>
         <span>{parts.length ? parts.reduce((acc, p, i) => (i ? [...acc, ' · ', p] : [p]), []) : status}</span>

@@ -45,18 +45,17 @@ function Poster({ show, sub, onPlay, onRemove, dim }) {
   );
 }
 
-export function Watch({ pull, people, who, recs, cont: contIn, apps, hidden, screens, serviceName, onPlay, onRemove, onLaunch, onScreen, wide }) {
+export function Watch({ pull, recs, cont: contIn, apps, hidden, screens, serviceName, onPlay, onRemove, onLaunch, onScreen, wide }) {
   const cont = contIn || [];
   const picks = (recs?.picks || []).filter((s) => s.playable !== false);
   const ready = (screens || []).filter((s) => s.ready);
   const [showPicks, setShowPicks] = useState(false);
-  useEffect(() => setShowPicks(false), [who]);
   return (
     <div className={`watch ${wide ? 'wide' : ''}`}>
       {!wide && <div className="pull-zone" {...pull}><h2 className="large-title">{t('watch')}</h2></div>}
 
       <section>
-        <h3>{t('keep_watching')}{who !== 'both' ? <span className="h3-who"> · {(people || []).find((p) => p.id === who)?.name || ''}</span> : null}</h3>
+        <h3>{t('keep_watching')}</h3>
         {cont.length ? (
           <div className="shelf">
             {cont.map((s) => <Poster key={s.id || `${s.title}-${s.service}`} show={s} onPlay={onPlay} onRemove={s.id ? onRemove : null}

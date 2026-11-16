@@ -299,93 +299,7 @@ export function ArrangeSheet({ open, onClose, tvName, hidden }) {
   );
 }
 
-// People: the names on the TV's "who is watching" switch and on this remote, in order. Drag by the
-// handle to reorder, tap a name to rename it, the cross removes. Every change saves straight away;
-// the TV picks it up on its next Home. Colours match the TV's (same palette, same id hash).
-const PALETTE = ['#ff9f0a', '#30b350', '#0a84ff', '#bf5af2', '#ff375f', '#00a5a8', '#5e5ce6', '#ac8e68'];
-export const personColour = (p) => {
-  if (p.colour) return p.colour;
-  const id = p.id || '';
-  let h = 0;
-  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return PALETTE[h % PALETTE.length];
-};
-export function PeopleSheet({ open, onClose, onSaved }) {
-  const [rows, setRows] = useState(null);
-  const [msg, setMsg] = useState('');
-  const [drag, setDrag] = useState(null);   // the id being dragged
-  const [adding, setAdding] = useState('');
-  const list = useRef(null);
-  const sheet = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    setRows(null); setMsg(''); setAdding('');
-    api.people().then((d) => setRows(d.people || [])).catch((e) => { setRows([]); setMsg(tBridge(e.key, e.vars, e.message)); });
-  }, [open]);
-
-  const save = (next, done) => {
-    // someone new has no id until the bridge gives one, so they show once it answers
-    if (next.every((p) => p.id)) setRows(next);
-    api.savePeople(next).then((d) => { setRows(d.people); onSaved?.(d.people); setMsg(done || t('saved_home')); })
-      .catch((e) => setMsg(tBridge(e.key, e.vars, e.message)));
-  };
-  const rename = (id, name) => {
-    const clean = name.replace(/\s+/g, ' ').trim();
-    const was = rows.find((p) => p.id === id);
-    if (!clean || !was || clean === was.name) { setRows(rows.slice()); return; }
-    save(rows.map((p) => (p.id === id ? { ...p, name: clean } : p)));
-  };
-  const remove = (p) => { tick(); save(rows.filter((x) => x.id !== p.id), t('removed', { name: p.name })); };
-  const add = (e) => {
-    e.preventDefault();
-    const name = adding.replace(/\s+/g, ' ').trim();
-    if (!name) return;
-    tick(); setAdding('');
-    save([...(rows || []), { name }], t('added', { name }));
-  };
-
-  const start = (e, id) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); tick(); setDrag(id); };
-  const move = (e) => {
-    if (!drag || !list.current) return;
-    const box = list.current.getBoundingClientRect();
-    const first = list.current.firstElementChild;
-    const rowH = first ? first.getBoundingClientRect().height + 6 : 66;
-    const to = Math.max(0, Math.min(rows.length - 1, Math.floor((e.clientY - box.top) / rowH)));
-    const from = rows.findIndex((p) => p.id === drag);
-    if (to !== from) { const r = rows.slice(); const [it] = r.splice(from, 1); r.splice(to, 0, it); setRows(r); }
-  };
-  const end = () => { if (drag) { setDrag(null); save(rows); } };
-
-  return (
-    <Sheet ref={sheet} open={open} onClose={onClose} title={t('people')} className="arrange-sheet people-sheet">
-      <p className="note arrange-lede">{t('people_lede')}</p>
-      {rows === null && <p className="note">{t('loading')}</p>}
-      {rows && rows.length === 0 && <p className="note">{t('nobody')}</p>}
-      <ol className="arrange" ref={list} onPointerMove={move} onPointerUp={end} onPointerCancel={end}>
-        {(rows || []).map((p) => (
-          <li key={p.id} className={`arrange-row glass ${drag === p.id ? 'lifted' : ''}`}>
-            <span className="person-dot" style={{ background: personColour(p) }}>{p.name.slice(0, 1).toUpperCase()}</span>
-            <input className="person-name" defaultValue={p.name} key={p.name} maxLength={40} aria-label={`Name for ${p.name}`}
-              enterKeyHint="done" onBlur={(e) => rename(p.id, e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }} />
-            <button className="person-remove" aria-label={`Remove ${p.name}`} onClick={() => remove(p)}><Ic.Close size={18} /></button>
-            <button className="grip" aria-label={`Move ${p.name}`} onPointerDown={(e) => start(e, p.id)}><Ic.Grip size={20} /></button>
-          </li>
-        ))}
-      </ol>
-      {rows && rows.length < 12 && (
-        <form className="ask-field glass person-add" onSubmit={add}>
-          <input value={adding} onChange={(e) => setAdding(e.target.value)} placeholder={t('add_person')} maxLength={40} enterKeyHint="done" aria-label="New person's name" />
-          <button type="submit" className="round solid small" aria-label="Add" disabled={!adding.trim()}><Ic.Plus size={18} /></button>
-        </form>
-      )}
-      {msg && <p className="note arrange-msg" role="status">{msg}</p>}
-    </Sheet>
-  );
-}
-
-export const MoreSheet = forwardRef(function MoreSheet({ open, onClose, sleepEnds, onSleep, onKey, onText, sleepError, tvs, tvId, onTv, picture, pictureInfo, onPicture, onArrange, onPeople, onKids }, ref) {
+export const MoreSheet = forwardRef(function MoreSheet({ open, onClose, sleepEnds, onSleep, onKey, onText, sleepError, tvs, tvId, onTv, picture, pictureInfo, onPicture, onArrange }, ref) {
   const [typed, setTyped] = useState('');
   const sheetEl = useRef(null);
   const setRefs = (el) => { sheetEl.current = el; if (typeof ref === 'function') ref(el); else if (ref) ref.current = el; };
@@ -449,9 +363,7 @@ export const MoreSheet = forwardRef(function MoreSheet({ open, onClose, sleepEnd
       </div>
       <div className="arrange-pair">
         <button className="pill glass arrange-open" onClick={() => { tick(); onArrange(); }}><Ic.Grid size={18} /> {t('arrange_apps')}</button>
-        <button className="pill glass arrange-open" onClick={() => { tick(); onPeople(); }}><Ic.People size={18} /> {t('people')}</button>
       </div>
-      <button className="pill glass arrange-open kids-open" onClick={() => { tick(); onKids(); }}><Ic.Lock size={18} /> {t('kids_mode')}</button>
 
       {/* this phone's language: "Same as the TV" follows the TV home's Home settings */}
       <section className="more-block">
@@ -468,31 +380,3 @@ export const MoreSheet = forwardRef(function MoreSheet({ open, onClose, sleepEnd
   );
 });
 
-export function Onboarding({ onPick, standalone, people }) {
-  return (
-    <div className="onboard">
-      <div className="onboard-inner">
-        <img className="onboard-icon" src="/icons/icon-192.png" alt="" />
-        <h1>{t('whos_phone')}</h1>
-        <p>{t('onboard_note')}</p>
-        <div className="onboard-pick">
-          {(people || []).map((p) => (
-            <button key={p.id} className="pill solid big" onClick={() => { tick(); onPick(p.id); }}>{p.name}</button>
-          ))}
-        </div>
-        {!standalone && (
-          <div className="install glass">
-            <b>{t('home_screen')}</b>
-            <span>{t('home_screen_how').split('{icon}')[0]}<ShareGlyph />{t('home_screen_how').split('{icon}')[1].split('{add}')[0]}<b>{t('add_to_home')}</b>{t('home_screen_how').split('{add}')[1]}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-const ShareGlyph = () => (
-  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-label="Share" style={{ verticalAlign: '-3px' }}>
-    <path d="M12 3v12M8 7l4-4 4 4M6 11H5v10h14V11h-1" />
-  </svg>
-);
