@@ -161,8 +161,8 @@
   // glass app icons: the focused app in its own colours, or staying glass (#32)
   var GLASS_FOCUS = "colour";
   // The focused tile's slow sway and glint: Home settings, Look, Moving tiles, else home.moving_tiles,
-  // else on, except with glass "lite" (a slower TV), where it is off (#52)
-  var MOVING = true;
+  // Default off to keep focus navigation responsive on TV GPUs; users can still enable it in Look settings.
+  var MOVING = false;
   // Lighter home (#58): no blur, no soft shadows, a photo that holds still, smaller pictures. For a slow box.
   var LIGHTER = false;
   // WebViews before Chrome 84 (still on many Android 9 TVs) skip gap in a flex box, so icons touch
