@@ -2,7 +2,7 @@ name: Build Aerial TV Traditional Chinese APK
 
 on:
   push:
-    branches: [feat/traditional-chinese-no-updater]
+    branches: [feat/traditional-chinese-no-updater, feat/aerial-tv-performance-r1]
   pull_request:
     branches: [main]
   workflow_dispatch:
