@@ -18,8 +18,9 @@
   var currentType = "clear"; // "rain", "snow", "fog", "storm", "clear"
   var particles = [];
   var fogNodes = [];
-  var MAX_RAIN = 65;
-  var MAX_SNOW = 40;
+  // Keep the ambient effect lightweight on TV-class GPUs without changing weather data or controls.
+  var MAX_RAIN = 48;
+  var MAX_SNOW = 30;
   var MAX_FOG = 4;
 
   var W = 1920;
